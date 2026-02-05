@@ -1,20 +1,41 @@
-# DigiNoise CLI
+# DigiNoise
 
-A lightweight Mac tool that generates "digital noise" by making automated API requests to obscure your online footprint. Available as both a CLI tool and a menu bar app.
-
-## Two Interfaces
-
-### 1. Command Line Tool
-For Terminal users who prefer keyboard control.
-
-### 2. Menu Bar App ⭐ (Recommended)
-A visual interface in your Mac's menu bar with one-click control and live status.
+A lightweight Mac tool that generates "digital noise" by making automated API requests to obscure your online footprint. Runs in your menu bar with one-click control.
 
 ---
 
-## Installation
+## 🚀 Quick Start (No Terminal Required!)
 
-### Full Install (CLI + Menu Bar)
+### 1. Download
+
+**[⬇️ Download DigiNoiseMenuBar.app](https://github.com/rosakowski/DigiNoise-CLI/releases/latest)**
+
+### 2. Install
+
+1. Unzip the downloaded file
+2. Drag `DigiNoiseMenuBar.app` to your **Applications** folder
+3. Double-click to launch
+
+### 3. Run
+
+1. Click the 🌐 icon in your menu bar (top right)
+2. Click **"Install Service"** (first time only)
+3. Click **"Start"**
+4. Done! It runs automatically in the background
+
+---
+
+## What It Does
+
+DigiNoise makes random API calls throughout the day (Wikipedia, weather, news, etc.) to create a realistic browsing pattern that helps obscure your actual online activity.
+
+**Runs 1-5 times per day** • **60+ API endpoints** • **Fully customizable**
+
+---
+
+## Building From Source (Developers)
+
+If you prefer to build from source or use the CLI:
 
 ```bash
 git clone https://github.com/rosakowski/DigiNoise-CLI.git
@@ -22,14 +43,6 @@ cd DigiNoise-CLI
 make install           # Installs CLI and launchd service
 make install-menu      # Installs menu bar app
 ```
-
-### Menu Bar App Only
-
-```bash
-make install-menu
-```
-
-Then launch **DigiNoiseMenuBar** from Applications or Spotlight.
 
 ---
 
