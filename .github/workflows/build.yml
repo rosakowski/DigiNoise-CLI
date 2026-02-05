@@ -9,13 +9,16 @@ on:
 
 jobs:
   build:
-    runs-on: macos-13  # Use macOS 13 for better compatibility
+    runs-on: macos-14  # Use macOS 14 with default Xcode
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Select Xcode Version
-      run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+    - name: Show Xcode version
+      run: xcodebuild -version
+    
+    - name: Show Swift version
+      run: swift --version
     
     - name: Build CLI
       run: |
