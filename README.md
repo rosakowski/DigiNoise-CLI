@@ -1,38 +1,74 @@
 # DigiNoise CLI
 
-A lightweight Mac command-line tool that generates "digital noise" by making automated API requests to obscure your online footprint. Runs as a background daemon with guaranteed execution.
+A lightweight Mac tool that generates "digital noise" by making automated API requests to obscure your online footprint. Available as both a CLI tool and a menu bar app.
 
-## Why CLI vs iOS?
+## Two Interfaces
 
-- **Reliable execution** - Uses macOS `launchd` for guaranteed background scheduling
-- **No suspension** - Runs even when you're not actively using your Mac
-- **More control** - Simple config, logs, and full visibility into operations
-- **Lower overhead** - No UI, no complex lifecycle management
+### 1. Command Line Tool
+For Terminal users who prefer keyboard control.
+
+### 2. Menu Bar App ⭐ (Recommended)
+A visual interface in your Mac's menu bar with one-click control and live status.
+
+---
 
 ## Installation
 
-### Quick Install (Recommended)
+### Full Install (CLI + Menu Bar)
 
 ```bash
 git clone https://github.com/rosakowski/DigiNoise-CLI.git
 cd DigiNoise-CLI
-make install
+make install           # Installs CLI and launchd service
+make install-menu      # Installs menu bar app
 ```
 
-### Manual Build
+### Menu Bar App Only
 
 ```bash
-# Build the binary
-swift build -c release
-
-# Copy to a PATH location
-cp .build/release/diginoise /usr/local/bin/
-
-# Install as service
-diginoise install
+make install-menu
 ```
 
-## Usage
+Then launch **DigiNoiseMenuBar** from Applications or Spotlight.
+
+---
+
+## Menu Bar App
+
+The menu bar app provides:
+
+- **🟢/🔴 Status indicator** - Green when running, red when stopped
+- **Click to expand** - Shows detailed status and controls
+- **Today's request count** - See your daily progress
+- **Recent activity log** - Last 8 entries
+- **Start/Stop button** - Toggle with one click
+- **Settings** - Adjust limits and hours
+- **View Log** - Open full log file
+
+### Menu Bar Screenshot
+
+```
+┌─────────────────────────────┐
+│ DigiNoise              🟢   │
+├─────────────────────────────┤
+│ Status: Running             │
+│ Today's Requests: 2/5       │
+│ Active Hours: 7:00-23:00    │
+├─────────────────────────────┤
+│ Recent Activity             │
+│ [2026-02-05] Success: Wiki  │
+│ [2026-02-05] Success: Weather│
+├─────────────────────────────┤
+│ [  Stop  ]                  │
+│ [Settings] [View Log]       │
+└─────────────────────────────┘
+```
+
+---
+
+## CLI Usage
+
+If you prefer Terminal:
 
 ```bash
 # Install the background service (one-time setup)
@@ -53,51 +89,79 @@ diginoise config --limit 5 --start 8 --end 22
 # Stop the daemon
 diginoise stop
 
-# Uninstall the service
+# Uninstall
 diginoise uninstall
 ```
 
-## Configuration
-
-Settings are stored in `~/.config/diginoise/config.json`:
-
-| Option | Default | Description |
-|--------|---------|-------------|
-| `dailyLimit` | 5 | Max API requests per day (0 = unlimited) |
-| `startHour` | 7 | Earliest hour to run (24h format) |
-| `endHour` | 23 | Latest hour to run (24h format) |
+---
 
 ## How It Works
 
-1. **launchd** runs `diginoise daemon` every 15 minutes
-2. The daemon checks if it should make a request (within limits/hours)
-3. Makes a random API call (Wikipedia, weather, etc.)
+1. **launchd** runs the daemon every 15 minutes
+2. Daemon checks if it should make a request (within limits/hours)
+3. Makes a random API call from 8 endpoints:
+   - Wikipedia (EN, ES, FR, DE) - random articles
+   - Weather - London, Tokyo
+   - Hacker News
+   - Random Quotes
 4. Calculates a random interval (1-6 hours) for the next request
-5. Exits - launchd will wake it up again in 15 minutes
-6. If the scheduled time passed while daemon was sleeping, it executes immediately
+5. Exits - launchd restarts it in 15 minutes
 
-This approach ensures reliable execution without keeping a process running constantly.
+**Result:** 1-5 requests per day, reliably, without keeping a process running.
+
+---
+
+## Configuration
+
+Settings stored in `~/.config/diginoise/config.json`:
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `dailyLimit` | 5 | Max requests per day |
+| `startHour` | 7 | Earliest hour to run (24h) |
+| `endHour` | 23 | Latest hour to run (24h) |
+
+Change via menu bar Settings or: `diginoise config --limit 5 --start 8 --end 22`
+
+---
 
 ## Log File
 
-Activity is logged to:
-- Terminal output (when running manually)
-- `~/.local/share/diginoise/diginoise.log` (persistent)
+Activity logged to: `~/.local/share/diginoise/diginoise.log`
 
-View with: `diginoise log` or `tail -f ~/.local/share/diginoise/diginoise.log`
+View with menu bar "View Log" button or: `diginoise log`
+
+---
+
+## Why This Works Better Than iOS
+
+| Feature | iOS App | Mac CLI/Menu Bar |
+|---------|---------|------------------|
+| Background reliability | ❌ iOS decides when to run | ✅ launchd guarantees execution |
+| Process running? | Must stay in memory | Exits between runs |
+| Battery impact | Higher | Minimal |
+| Visibility | Hidden in app switcher | Always visible in menu bar |
+| Control | Open app, navigate | One click in menu bar |
+
+---
 
 ## Uninstall
 
 ```bash
-diginoise uninstall
-rm /usr/local/bin/diginoise
-rm -rf ~/.config/diginoise ~/.local/share/diginoise
+diginoise uninstall          # Remove service
+rm /usr/local/bin/diginoise  # Remove CLI
+rm -rf /Applications/DigiNoiseMenuBar.app  # Remove menu bar app
+rm -rf ~/.config/diginoise ~/.local/share/diginoise  # Remove data
 ```
+
+---
 
 ## Requirements
 
 - macOS 13.0+
-- Swift 5.9+
+- Swift 5.9+ (for building from source)
+
+---
 
 ## License
 
