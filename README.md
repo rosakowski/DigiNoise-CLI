@@ -99,11 +99,13 @@ diginoise uninstall
 
 1. **launchd** runs the daemon every 15 minutes
 2. Daemon checks if it should make a request (within limits/hours)
-3. Makes a random API call from 8 endpoints:
-   - Wikipedia (EN, ES, FR, DE) - random articles
-   - Weather - London, Tokyo
-   - Hacker News
-   - Random Quotes
+3. Makes a random API call from 40 endpoints:
+   - Wikipedia (6 languages: EN, ES, FR, DE, IT, PT) - random articles
+   - Weather (14 global cities across all continents)
+   - Tech (Hacker News, GitHub Activity)
+   - News/Science (Reddit: worldnews, science, space)
+   - Entertainment (Art Institute, Open Library, Dog Photos)
+   - Lifestyle (Quotes, Cocktail recipes)
 4. Calculates a random interval (1-6 hours) for the next request
 5. Exits - launchd restarts it in 15 minutes
 
@@ -130,6 +132,34 @@ Change via menu bar Settings or: `diginoise config --limit 5 --start 8 --end 22`
 Activity logged to: `~/.local/share/diginoise/diginoise.log`
 
 View with menu bar "View Log" button or: `diginoise log`
+
+---
+
+## Digital Footprint Diversity
+
+The app creates a realistic browsing pattern by calling diverse APIs:
+
+**Reference (6 sources):** Wikipedia articles in 6 languages (EN, ES, FR, DE, IT, PT)
+
+**Weather (14 cities):** Global coverage across all continents
+- Europe: London, Paris, Berlin, Rome, Moscow
+- Asia: Tokyo, Beijing, Singapore, Dubai, New Delhi, Jakarta
+- Americas: NYC, LA, Mexico City, São Paulo, Sydney, Toronto
+- Africa: Cape Town, Nairobi
+
+**Tech (2 sources):** Hacker News, GitHub public events
+
+**News/Science (3 sources):** Reddit worldnews, science, space
+
+**Entertainment (4 sources):** Art Institute, Open Library, Dog photos, Cocktail recipes
+
+**Lifestyle (1 source):** Random quotes
+
+This variety makes your traffic look like someone who:
+- Checks weather in places they travel or have connections to
+- Reads tech news and follows coding
+- Is interested in science, art, and culture
+- Enjoys casual entertainment browsing
 
 ---
 
