@@ -1,6 +1,21 @@
 import SwiftUI
 import Combine
 
+// MARK: - Category Settings
+struct CategorySettings: Codable {
+    var reference: Bool = true
+    var weather: Bool = true
+    var tech: Bool = true
+    var news: Bool = true
+    var finance: Bool = true
+    var science: Bool = true
+    var entertainment: Bool = true
+    var lifestyle: Bool = true
+    var sports: Bool = true
+    var recipes: Bool = true
+    var travel: Bool = true
+}
+
 // MARK: - Shared Configuration
 struct Config: Codable {
     var isRunning: Bool = false
@@ -9,6 +24,7 @@ struct Config: Codable {
     var endHour: Int = 23
     var requestCount: Int = 0
     var lastResetDate: Date = Date()
+    var enabledCategories: CategorySettings = CategorySettings()
     
     static let configPath = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent(".config/diginoise/config.json")
@@ -241,6 +257,14 @@ struct MenuBarView: View {
                     .fontWeight(.medium)
             }
             
+            HStack {
+                Text("Categories:")
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text("\(enabledCategoriesCount)/11")
+                    .fontWeight(.medium)
+            }
+            
             if !appState.isServiceInstalled {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
@@ -251,6 +275,15 @@ struct MenuBarView: View {
                 }
             }
         }
+    }
+    
+    var enabledCategoriesCount: Int {
+        let cats = appState.config.enabledCategories
+        return [
+            cats.reference, cats.weather, cats.tech, cats.news,
+            cats.finance, cats.science, cats.entertainment,
+            cats.lifestyle, cats.sports, cats.recipes, cats.travel
+        ].filter { $0 }.count
     }
     
     var activityView: some View {
@@ -312,22 +345,27 @@ struct MenuBarView: View {
 // MARK: - Settings View
 struct SettingsView: View {
     @State private var config = Config.load()
+    @State private var selectedTab = 0
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             Text("Settings")
                 .font(.title2)
                 .fontWeight(.bold)
             
-            Form {
-                Section {
-                    Stepper("Daily Limit: \(config.dailyLimit)", value: $config.dailyLimit, in: 1...50)
-                    Stepper("Start Hour: \(config.startHour)", value: $config.startHour, in: 0...23)
-                    Stepper("End Hour: \(config.endHour)", value: $config.endHour, in: 0...23)
-                }
+            Picker("Tab", selection: $selectedTab) {
+                Text("General").tag(0)
+                Text("Categories").tag(1)
             }
-            .frame(width: 250)
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            
+            if selectedTab == 0 {
+                generalSettings
+            } else {
+                categoriesSettings
+            }
             
             HStack {
                 Button("Cancel") { dismiss() }
@@ -341,6 +379,49 @@ struct SettingsView: View {
             }
         }
         .padding()
-        .frame(width: 300, height: 250)
+        .frame(width: 320, height: selectedTab == 0 ? 220 : 400)
+    }
+    
+    var generalSettings: some View {
+        Form {
+            Stepper("Daily Limit: \(config.dailyLimit)", value: $config.dailyLimit, in: 1...50)
+            Stepper("Start Hour: \(config.startHour)", value: $config.startHour, in: 0...23)
+            Stepper("End Hour: \(config.endHour)", value: $config.endHour, in: 0...23)
+        }
+        .frame(width: 280)
+    }
+    
+    var categoriesSettings: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Enabled Categories")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                CategoryToggle(title: "Reference (Wikipedia)", isOn: $config.enabledCategories.reference)
+                CategoryToggle(title: "Weather", isOn: $config.enabledCategories.weather)
+                CategoryToggle(title: "Tech", isOn: $config.enabledCategories.tech)
+                CategoryToggle(title: "News", isOn: $config.enabledCategories.news)
+                CategoryToggle(title: "Finance", isOn: $config.enabledCategories.finance)
+                CategoryToggle(title: "Science", isOn: $config.enabledCategories.science)
+                CategoryToggle(title: "Entertainment", isOn: $config.enabledCategories.entertainment)
+                CategoryToggle(title: "Lifestyle", isOn: $config.enabledCategories.lifestyle)
+                CategoryToggle(title: "Sports", isOn: $config.enabledCategories.sports)
+                CategoryToggle(title: "Recipes", isOn: $config.enabledCategories.recipes)
+                CategoryToggle(title: "Travel", isOn: $config.enabledCategories.travel)
+            }
+            .padding(.horizontal)
+        }
+        .frame(width: 280)
+    }
+}
+
+struct CategoryToggle: View {
+    let title: String
+    @Binding var isOn: Bool
+    
+    var body: some View {
+        Toggle(title, isOn: $isOn)
+            .toggleStyle(.switch)
     }
 }
