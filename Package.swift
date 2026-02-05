@@ -9,7 +9,7 @@ let package = Package(
         .executable(name: "DigiNoiseMenuBar", targets: ["DigiNoiseMenuBar"])
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.2.0"),
+        .package(url: "https://github.com/apple/swift-argument-parser", exact: "1.1.4"),
     ],
     targets: [
         .executableTarget(
