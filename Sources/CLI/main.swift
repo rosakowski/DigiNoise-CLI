@@ -57,8 +57,10 @@ struct Config: Codable {
     }
     
     var canRunToday: Bool {
-        checkAndResetDaily()
-        return requestCount < dailyLimit
+        mutating get {
+            checkAndResetDaily()
+            return requestCount < dailyLimit
+        }
     }
 }
 
@@ -457,7 +459,7 @@ struct DigiNoiseCLI: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "diginoise",
         abstract: "Generate digital noise to obfuscate your online footprint",
-        subcommands: [Start.self, Stop.self, Status.self, Config.self, Install.self, Uninstall.self, Run.self, Log.self]
+        subcommands: [Start.self, Stop.self, Status.self, ConfigCommand.self, Install.self, Uninstall.self, Run.self, Log.self, Daemon.self]
     )
 }
 
@@ -536,7 +538,7 @@ struct Status: AsyncParsableCommand {
     }
 }
 
-struct Config: AsyncParsableCommand {
+struct ConfigCommand: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "config",
         abstract: "Configure settings",
@@ -746,7 +748,7 @@ struct Run: AsyncParsableCommand {
 struct Log: AsyncParsableCommand {
     static var configuration = CommandConfiguration(abstract: "View recent log entries")
     
-    @Option(name: .shortAndLong, help: "Number of lines to show", transform: Int.init)
+    @Option(name: .shortAndLong, help: "Number of lines to show")
     var lines: Int = 20
     
     func run() async throws {
