@@ -1,6 +1,21 @@
 import Foundation
 import ArgumentParser
 
+// MARK: - Category Settings
+struct CategorySettings: Codable {
+    var reference: Bool = true      // Wikipedia
+    var weather: Bool = true        // Weather APIs
+    var tech: Bool = true           // Hacker News, GitHub
+    var news: Bool = true           // Reddit news
+    var finance: Bool = true        // Stocks, crypto
+    var science: Bool = true        // Space, science
+    var entertainment: Bool = true  // Art, books, dogs
+    var lifestyle: Bool = true      // Quotes, cocktails
+    var sports: Bool = true         // Sports scores
+    var recipes: Bool = true        // Food recipes
+    var travel: Bool = true         // Translation, geography
+}
+
 // MARK: - Configuration
 struct Config: Codable {
     var isRunning: Bool = false
@@ -9,6 +24,7 @@ struct Config: Codable {
     var endHour: Int = 23
     var requestCount: Int = 0
     var lastResetDate: Date = Date()
+    var enabledCategories: CategorySettings = CategorySettings()
     
     static let defaultConfigPath = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent(".config/diginoise/config.json")
@@ -83,8 +99,18 @@ struct APIEndpoint {
     let description: String
     let category: EndpointCategory
     
-    enum EndpointCategory {
-        case reference, weather, tech, news, entertainment, lifestyle, science
+    enum EndpointCategory: String, CaseIterable, Codable {
+        case reference = "Reference"
+        case weather = "Weather"
+        case tech = "Tech"
+        case news = "News"
+        case finance = "Finance"
+        case science = "Science"
+        case entertainment = "Entertainment"
+        case lifestyle = "Lifestyle"
+        case sports = "Sports"
+        case recipes = "Recipes"
+        case travel = "Travel"
     }
     
     // Expanded list for more realistic browsing patterns
@@ -175,6 +201,42 @@ struct APIEndpoint {
                    description: "Cocktail Recipe", category: .lifestyle),
         APIEndpoint(url: "https://dog.ceo/api/breeds/image/random", 
                    description: "Dog Photo", category: .entertainment),
+        APIEndpoint(url: "https://www.boredapi.com/api/activity", 
+                   description: "Activity Suggestion", category: .lifestyle),
+        
+        // === FINANCE (Stocks & Crypto) ===
+        APIEndpoint(url: "https://api.coindesk.com/v1/bpi/currentprice.json", 
+                   description: "Bitcoin Price", category: .finance),
+        APIEndpoint(url: "https://api.coinbase.com/v2/exchange-rates?currency=BTC", 
+                   description: "Crypto Rates", category: .finance),
+        APIEndpoint(url: "https://query1.finance.yahoo.com/v8/finance/chart/^GSPC?interval=1d&range=1d", 
+                   description: "S&P 500", category: .finance),
+        APIEndpoint(url: "https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1d&range=1d", 
+                   description: "Dow Jones", category: .finance),
+        APIEndpoint(url: "https://query1.finance.yahoo.com/v8/finance/chart/^IXIC?interval=1d&range=1d", 
+                   description: "NASDAQ", category: .finance),
+        
+        // === SPORTS ===
+        APIEndpoint(url: "https://www.thesportsdb.com/api/v1/json/3/all_sports.php", 
+                   description: "Sports List", category: .sports),
+        APIEndpoint(url: "https://www.thesportsdb.com/api/v1/json/3/all_countries.php", 
+                   description: "Sports Countries", category: .sports),
+        APIEndpoint(url: "https://api.football-data.org/v4/competitions/PL/matches?status=SCHEDULED&limit=1", 
+                   description: "Premier League", category: .sports),
+        
+        // === RECIPES (Food) ===
+        APIEndpoint(url: "https://www.themealdb.com/api/json/v1/1/random.php", 
+                   description: "Random Meal", category: .recipes),
+        APIEndpoint(url: "https://www.themealdb.com/api/json/v1/1/randomselection.php", 
+                   description: "Meal Selection", category: .recipes),
+        
+        // === TRAVEL (Translation & Geography) ===
+        APIEndpoint(url: "https://restcountries.com/v3.1/all?fields=name,capital,population", 
+                   description: "Country Facts", category: .travel),
+        APIEndpoint(url: "https://api.exchangerate-api.com/v4/latest/USD", 
+                   description: "Exchange Rates", category: .travel),
+        APIEndpoint(url: "https://worldtimeapi.org/api/ip", 
+                   description: "World Time", category: .travel),
     ]
 }
 
@@ -202,9 +264,32 @@ struct NoiseGenerator {
             return
         }
         
+        // Filter endpoints by enabled categories
+        let enabledEndpoints = APIEndpoint.all.filter { endpoint in
+            switch endpoint.category {
+            case .reference: return config.enabledCategories.reference
+            case .weather: return config.enabledCategories.weather
+            case .tech: return config.enabledCategories.tech
+            case .news: return config.enabledCategories.news
+            case .finance: return config.enabledCategories.finance
+            case .science: return config.enabledCategories.science
+            case .entertainment: return config.enabledCategories.entertainment
+            case .lifestyle: return config.enabledCategories.lifestyle
+            case .sports: return config.enabledCategories.sports
+            case .recipes: return config.enabledCategories.recipes
+            case .travel: return config.enabledCategories.travel
+            }
+        }
+        
+        guard !enabledEndpoints.isEmpty else {
+            Logger.log("No enabled categories. Skipping.")
+            scheduleNextRun()
+            return
+        }
+        
         // Make the API call
-        let endpoint = APIEndpoint.all.randomElement()!
-        Logger.log("Requesting: \(endpoint.description)")
+        let endpoint = enabledEndpoints.randomElement()!
+        Logger.log("Requesting: \(endpoint.description) (\(endpoint.category.rawValue))")
         
         guard let url = URL(string: endpoint.url) else {
             Logger.log("Invalid URL, skipping")
@@ -426,17 +511,37 @@ struct Status: AsyncParsableCommand {
     
     func run() async throws {
         let config = Config.load()
+        let enabledCount = [
+            config.enabledCategories.reference,
+            config.enabledCategories.weather,
+            config.enabledCategories.tech,
+            config.enabledCategories.news,
+            config.enabledCategories.finance,
+            config.enabledCategories.science,
+            config.enabledCategories.entertainment,
+            config.enabledCategories.lifestyle,
+            config.enabledCategories.sports,
+            config.enabledCategories.recipes,
+            config.enabledCategories.travel
+        ].filter { $0 }.count
         
         print("📊 DigiNoise Status")
         print("   State: \(config.isRunning ? "Running ✅" : "Stopped ⏹️")")
         print("   Today's requests: \(config.requestCount)/\(config.dailyLimit)")
         print("   Active hours: \(config.startHour):00-\(config.endHour):00")
         print("   Service installed: \(LaunchDManager.isInstalled() ? "Yes ✅" : "No ❌")")
+        print("   Categories enabled: \(enabledCount)/11")
+        print("")
+        print("Run 'diginoise config' to see all category settings")
     }
 }
 
 struct Config: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(abstract: "Configure settings")
+    static var configuration = CommandConfiguration(
+        commandName: "config",
+        abstract: "Configure settings",
+        subcommands: [Categories.self]
+    )
     
     @Option(name: .shortAndLong, help: "Daily request limit (0-50)")
     var limit: Int?
@@ -478,11 +583,7 @@ struct Config: AsyncParsableCommand {
         }
         
         if limit == nil && start == nil && end == nil {
-            print("Current configuration:")
-            print("   Daily limit: \(config.dailyLimit) requests")
-            print("   Active hours: \(config.startHour):00-\(config.endHour):00")
-            print("")
-            print("Usage: diginoise config --limit 5 --start 8 --end 22")
+            printCurrentConfig(config)
         }
         
         config.save()
@@ -491,6 +592,124 @@ struct Config: AsyncParsableCommand {
             print("")
             print("Note: Changes will take effect on next run")
         }
+    }
+    
+    func printCurrentConfig(_ config: Config) {
+        print("Current configuration:")
+        print("   Daily limit: \(config.dailyLimit) requests")
+        print("   Active hours: \(config.startHour):00-\(config.endHour):00")
+        print("")
+        print("Enabled categories:")
+        print("   Reference (Wikipedia): \(config.enabledCategories.reference ? "✅" : "❌")")
+        print("   Weather: \(config.enabledCategories.weather ? "✅" : "❌")")
+        print("   Tech: \(config.enabledCategories.tech ? "✅" : "❌")")
+        print("   News: \(config.enabledCategories.news ? "✅" : "❌")")
+        print("   Finance: \(config.enabledCategories.finance ? "✅" : "❌")")
+        print("   Science: \(config.enabledCategories.science ? "✅" : "❌")")
+        print("   Entertainment: \(config.enabledCategories.entertainment ? "✅" : "❌")")
+        print("   Lifestyle: \(config.enabledCategories.lifestyle ? "✅" : "❌")")
+        print("   Sports: \(config.enabledCategories.sports ? "✅" : "❌")")
+        print("   Recipes: \(config.enabledCategories.recipes ? "✅" : "❌")")
+        print("   Travel: \(config.enabledCategories.travel ? "✅" : "❌")")
+        print("")
+        print("Usage:")
+        print("   diginoise config --limit 5 --start 8 --end 22")
+        print("   diginoise config categories --finance --sports")
+        print("   diginoise config categories --no-finance --no-sports")
+    }
+}
+
+struct Categories: AsyncParsableCommand {
+    static var configuration = CommandConfiguration(abstract: "Toggle API categories")
+    
+    @Flag(name: .customLong("reference"), help: "Toggle Wikipedia") var reference: Bool = false
+    @Flag(name: .customLong("no-reference"), help: "Disable Wikipedia") var noReference: Bool = false
+    
+    @Flag(name: .customLong("weather"), help: "Toggle weather APIs") var weather: Bool = false
+    @Flag(name: .customLong("no-weather"), help: "Disable weather") var noWeather: Bool = false
+    
+    @Flag(name: .customLong("tech"), help: "Toggle tech APIs") var tech: Bool = false
+    @Flag(name: .customLong("no-tech"), help: "Disable tech") var noTech: Bool = false
+    
+    @Flag(name: .customLong("news"), help: "Toggle news APIs") var news: Bool = false
+    @Flag(name: .customLong("no-news"), help: "Disable news") var noNews: Bool = false
+    
+    @Flag(name: .customLong("finance"), help: "Toggle finance APIs") var finance: Bool = false
+    @Flag(name: .customLong("no-finance"), help: "Disable finance") var noFinance: Bool = false
+    
+    @Flag(name: .customLong("science"), help: "Toggle science APIs") var science: Bool = false
+    @Flag(name: .customLong("no-science"), help: "Disable science") var noScience: Bool = false
+    
+    @Flag(name: .customLong("entertainment"), help: "Toggle entertainment APIs") var entertainment: Bool = false
+    @Flag(name: .customLong("no-entertainment"), help: "Disable entertainment") var noEntertainment: Bool = false
+    
+    @Flag(name: .customLong("lifestyle"), help: "Toggle lifestyle APIs") var lifestyle: Bool = false
+    @Flag(name: .customLong("no-lifestyle"), help: "Disable lifestyle") var noLifestyle: Bool = false
+    
+    @Flag(name: .customLong("sports"), help: "Toggle sports APIs") var sports: Bool = false
+    @Flag(name: .customLong("no-sports"), help: "Disable sports") var noSports: Bool = false
+    
+    @Flag(name: .customLong("recipes"), help: "Toggle recipe APIs") var recipes: Bool = false
+    @Flag(name: .customLong("no-recipes"), help: "Disable recipes") var noRecipes: Bool = false
+    
+    @Flag(name: .customLong("travel"), help: "Toggle travel APIs") var travel: Bool = false
+    @Flag(name: .customLong("no-travel"), help: "Disable travel") var noTravel: Bool = false
+    
+    func run() async throws {
+        var config = Config.load()
+        var changed = false
+        
+        if reference { config.enabledCategories.reference.toggle(); changed = true }
+        if noReference { config.enabledCategories.reference = false; changed = true }
+        
+        if weather { config.enabledCategories.weather.toggle(); changed = true }
+        if noWeather { config.enabledCategories.weather = false; changed = true }
+        
+        if tech { config.enabledCategories.tech.toggle(); changed = true }
+        if noTech { config.enabledCategories.tech = false; changed = true }
+        
+        if news { config.enabledCategories.news.toggle(); changed = true }
+        if noNews { config.enabledCategories.news = false; changed = true }
+        
+        if finance { config.enabledCategories.finance.toggle(); changed = true }
+        if noFinance { config.enabledCategories.finance = false; changed = true }
+        
+        if science { config.enabledCategories.science.toggle(); changed = true }
+        if noScience { config.enabledCategories.science = false; changed = true }
+        
+        if entertainment { config.enabledCategories.entertainment.toggle(); changed = true }
+        if noEntertainment { config.enabledCategories.entertainment = false; changed = true }
+        
+        if lifestyle { config.enabledCategories.lifestyle.toggle(); changed = true }
+        if noLifestyle { config.enabledCategories.lifestyle = false; changed = true }
+        
+        if sports { config.enabledCategories.sports.toggle(); changed = true }
+        if noSports { config.enabledCategories.sports = false; changed = true }
+        
+        if recipes { config.enabledCategories.recipes.toggle(); changed = true }
+        if noRecipes { config.enabledCategories.recipes = false; changed = true }
+        
+        if travel { config.enabledCategories.travel.toggle(); changed = true }
+        if noTravel { config.enabledCategories.travel = false; changed = true }
+        
+        if changed {
+            config.save()
+            print("Category settings updated!")
+        }
+        
+        print("")
+        print("Enabled categories:")
+        print("   Reference: \(config.enabledCategories.reference ? "✅" : "❌")")
+        print("   Weather: \(config.enabledCategories.weather ? "✅" : "❌")")
+        print("   Tech: \(config.enabledCategories.tech ? "✅" : "❌")")
+        print("   News: \(config.enabledCategories.news ? "✅" : "❌")")
+        print("   Finance: \(config.enabledCategories.finance ? "✅" : "❌")")
+        print("   Science: \(config.enabledCategories.science ? "✅" : "❌")")
+        print("   Entertainment: \(config.enabledCategories.entertainment ? "✅" : "❌")")
+        print("   Lifestyle: \(config.enabledCategories.lifestyle ? "✅" : "❌")")
+        print("   Sports: \(config.enabledCategories.sports ? "✅" : "❌")")
+        print("   Recipes: \(config.enabledCategories.recipes ? "✅" : "❌")")
+        print("   Travel: \(config.enabledCategories.travel ? "✅" : "❌")")
     }
 }
 

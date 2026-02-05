@@ -99,13 +99,7 @@ diginoise uninstall
 
 1. **launchd** runs the daemon every 15 minutes
 2. Daemon checks if it should make a request (within limits/hours)
-3. Makes a random API call from 40 endpoints:
-   - Wikipedia (6 languages: EN, ES, FR, DE, IT, PT) - random articles
-   - Weather (14 global cities across all continents)
-   - Tech (Hacker News, GitHub Activity)
-   - News/Science (Reddit: worldnews, science, space)
-   - Entertainment (Art Institute, Open Library, Dog Photos)
-   - Lifestyle (Quotes, Cocktail recipes)
+3. Makes a random API call from 60+ endpoints across enabled categories
 4. Calculates a random interval (1-6 hours) for the next request
 5. Exits - launchd restarts it in 15 minutes
 
@@ -115,15 +109,79 @@ diginoise uninstall
 
 ## Configuration
 
-Settings stored in `~/.config/diginoise/config.json`:
+### Basic Settings
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `dailyLimit` | 5 | Max requests per day |
-| `startHour` | 7 | Earliest hour to run (24h) |
-| `endHour` | 23 | Latest hour to run (24h) |
+```bash
+# Daily limit and active hours
+diginoise config --limit 5 --start 8 --end 22
+```
 
-Change via menu bar Settings or: `diginoise config --limit 5 --start 8 --end 22`
+### Category Toggles (NEW!)
+
+Customize which API categories to ping:
+
+```bash
+# View current category settings
+diginoise config
+
+# Enable specific categories
+diginoise config categories --finance --sports --recipes
+
+# Disable categories you don't want
+diginoise config categories --no-finance --no-sports
+
+# Toggle a category (enable if disabled, disable if enabled)
+diginoise config categories --finance
+```
+
+All categories are enabled by default. Toggle off what doesn't fit your persona.
+
+---
+
+## API Categories (60+ Endpoints)
+
+| Category | Endpoints | Description |
+|----------|-----------|-------------|
+| **Reference** | 6 | Wikipedia in 6 languages |
+| **Weather** | 14 | Global cities on all continents |
+| **Tech** | 2 | Hacker News, GitHub Activity |
+| **News** | 3 | Reddit: worldnews, science, space |
+| **Finance** | 5 | Bitcoin, crypto rates, S&P 500, Dow, NASDAQ |
+| **Science** | (in News) | Space and science news |
+| **Entertainment** | 5 | Art Institute, Open Library, Dogs, Cocktails, Activities |
+| **Lifestyle** | 1 | Random quotes |
+| **Sports** | 3 | Sports list, countries, Premier League |
+| **Recipes** | 2 | Random meals from TheMealDB |
+| **Travel** | 3 | Country facts, exchange rates, world time |
+
+### Detailed Endpoint List
+
+**Wikipedia (6):** EN, ES, FR, DE, IT, PT
+
+**Weather (14 cities):**
+- Europe: London, Paris, Berlin, Rome, Moscow
+- Asia: Tokyo, Beijing, Singapore, Dubai, New Delhi, Jakarta
+- Americas: NYC, LA, Mexico City, São Paulo, Sydney, Toronto
+- Africa: Cape Town, Nairobi
+
+**Finance (5):**
+- CoinDesk Bitcoin price
+- Coinbase crypto rates
+- Yahoo Finance: S&P 500, Dow Jones, NASDAQ
+
+**Sports (3):**
+- TheSportsDB: All sports list
+- TheSportsDB: All countries
+- Football-Data: Premier League matches
+
+**Recipes (2):**
+- TheMealDB: Random meal
+- TheMealDB: Random selection
+
+**Travel (3):**
+- REST Countries: Country facts
+- Exchange Rate API: Currency rates
+- World Time API: Current time by IP
 
 ---
 
@@ -137,29 +195,40 @@ View with menu bar "View Log" button or: `diginoise log`
 
 ## Digital Footprint Diversity
 
-The app creates a realistic browsing pattern by calling diverse APIs:
+The app creates a realistic browsing pattern by calling diverse APIs. **Customize which categories match your persona:**
 
-**Reference (6 sources):** Wikipedia articles in 6 languages (EN, ES, FR, DE, IT, PT)
+**International Persona:**
+- Reference: Wikipedia in 6 languages
+- Weather: 14 cities across all continents
+- Travel: Country facts, exchange rates, world time
 
-**Weather (14 cities):** Global coverage across all continents
-- Europe: London, Paris, Berlin, Rome, Moscow
-- Asia: Tokyo, Beijing, Singapore, Dubai, New Delhi, Jakarta
-- Americas: NYC, LA, Mexico City, São Paulo, Sydney, Toronto
-- Africa: Cape Town, Nairobi
+**Professional/Investor Persona:**
+- Tech: Hacker News, GitHub Activity
+- Finance: Bitcoin, crypto, stock indices (S&P 500, Dow, NASDAQ)
+- News: World events, science, space
 
-**Tech (2 sources):** Hacker News, GitHub public events
+**Lifestyle/Casual Persona:**
+- Entertainment: Art, books, dog photos, cocktails
+- Recipes: Food inspiration
+- Lifestyle: Quotes, activity suggestions
+- Sports: Premier League, general sports
 
-**News/Science (3 sources):** Reddit worldnews, science, space
+**Mix and match** to create your ideal digital footprint. Toggle off categories that don't fit.
 
-**Entertainment (4 sources):** Art Institute, Open Library, Dog photos, Cocktail recipes
+### Example Personas
 
-**Lifestyle (1 source):** Random quotes
+```bash
+# The Global Business Traveler
+diginoise config categories --no-sports --no-recipes
+# Enables: Reference, Weather, Tech, News, Finance, Travel
 
-This variety makes your traffic look like someone who:
-- Checks weather in places they travel or have connections to
-- Reads tech news and follows coding
-- Is interested in science, art, and culture
-- Enjoys casual entertainment browsing
+# The Foodie Creative
+diginoise config categories --no-finance --no-sports --no-tech
+# Enables: Reference, Weather, News, Entertainment, Lifestyle, Recipes
+
+# The Minimalist
+diginoise config categories --no-finance --no-sports --no-recipes --no-travel --no-entertainment
+# Enables: Just Reference, Weather, Tech, News
 
 ---
 
