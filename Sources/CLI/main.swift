@@ -81,24 +81,100 @@ enum Logger {
 struct APIEndpoint {
     let url: String
     let description: String
+    let category: EndpointCategory
     
+    enum EndpointCategory {
+        case reference, weather, tech, news, entertainment, lifestyle, science
+    }
+    
+    // Expanded list for more realistic browsing patterns
     static let all: [APIEndpoint] = [
+        // === REFERENCE (Wikipedia in 6 languages) ===
         APIEndpoint(url: "https://en.wikipedia.org/api/rest_v1/page/random/summary", 
-                   description: "English Wikipedia"),
+                   description: "English Wikipedia", category: .reference),
         APIEndpoint(url: "https://es.wikipedia.org/api/rest_v1/page/random/summary", 
-                   description: "Spanish Wikipedia"),
+                   description: "Spanish Wikipedia", category: .reference),
         APIEndpoint(url: "https://fr.wikipedia.org/api/rest_v1/page/random/summary", 
-                   description: "French Wikipedia"),
+                   description: "French Wikipedia", category: .reference),
         APIEndpoint(url: "https://de.wikipedia.org/api/rest_v1/page/random/summary", 
-                   description: "German Wikipedia"),
+                   description: "German Wikipedia", category: .reference),
+        APIEndpoint(url: "https://it.wikipedia.org/api/rest_v1/page/random/summary", 
+                   description: "Italian Wikipedia", category: .reference),
+        APIEndpoint(url: "https://pt.wikipedia.org/api/rest_v1/page/random/summary", 
+                   description: "Portuguese Wikipedia", category: .reference),
+        
+        // === WEATHER (Global cities - diverse geography) ===
+        // Europe
         APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=51.5074&longitude=-0.1278&current=temperature_2m", 
-                   description: "London Weather"),
+                   description: "London Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=48.8566&longitude=2.3522&current=temperature_2m", 
+                   description: "Paris Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=52.5200&longitude=13.4050&current=temperature_2m", 
+                   description: "Berlin Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=41.9028&longitude=12.4964&current=temperature_2m", 
+                   description: "Rome Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=55.7558&longitude=37.6173&current=temperature_2m", 
+                   description: "Moscow Weather", category: .weather),
+        
+        // Asia
         APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=35.6762&longitude=139.6503&current=temperature_2m", 
-                   description: "Tokyo Weather"),
+                   description: "Tokyo Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=39.9042&longitude=116.4074&current=temperature_2m", 
+                   description: "Beijing Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=1.3521&longitude=103.8198&current=temperature_2m", 
+                   description: "Singapore Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=25.2048&longitude=55.2708&current=temperature_2m", 
+                   description: "Dubai Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=28.6139&longitude=77.2090&current=temperature_2m", 
+                   description: "New Delhi Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=-6.2088&longitude=106.8456&current=temperature_2m", 
+                   description: "Jakarta Weather", category: .weather),
+        
+        // Americas
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.0060&current=temperature_2m", 
+                   description: "New York Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=34.0522&longitude=-118.2437&current=temperature_2m", 
+                   description: "Los Angeles Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=19.4326&longitude=-99.1332&current=temperature_2m", 
+                   description: "Mexico City Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=-23.5505&longitude=-46.6333&current=temperature_2m", 
+                   description: "São Paulo Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=-33.8688&longitude=151.2093&current=temperature_2m", 
+                   description: "Sydney Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=43.6532&longitude=-79.3832&current=temperature_2m", 
+                   description: "Toronto Weather", category: .weather),
+        
+        // Africa
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=-33.9249&longitude=18.4241&current=temperature_2m", 
+                   description: "Cape Town Weather", category: .weather),
+        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=-1.2921&longitude=36.8219&current=temperature_2m", 
+                   description: "Nairobi Weather", category: .weather),
+        
+        // === TECH ===
         APIEndpoint(url: "https://hacker-news.firebaseio.com/v0/topstories.json?limitToFirst=1", 
-                   description: "Hacker News"),
+                   description: "Hacker News", category: .tech),
+        APIEndpoint(url: "https://api.github.com/events?per_page=1", 
+                   description: "GitHub Activity", category: .tech),
+        
+        // === NEWS (Reddit as proxy for news interest) ===
+        APIEndpoint(url: "https://www.reddit.com/r/worldnews.json?limit=1", 
+                   description: "World News", category: .news),
+        APIEndpoint(url: "https://www.reddit.com/r/science.json?limit=1", 
+                   description: "Science News", category: .science),
+        APIEndpoint(url: "https://www.reddit.com/r/space.json?limit=1", 
+                   description: "Space News", category: .science),
+        
+        // === LIFESTYLE / ENTERTAINMENT ===
         APIEndpoint(url: "https://api.quotable.io/random", 
-                   description: "Random Quote"),
+                   description: "Random Quote", category: .lifestyle),
+        APIEndpoint(url: "https://api.artic.edu/api/v1/artworks?limit=1", 
+                   description: "Art Institute", category: .entertainment),
+        APIEndpoint(url: "https://openlibrary.org/search.json?q=fiction&limit=1", 
+                   description: "Book Search", category: .entertainment),
+        APIEndpoint(url: "https://www.thecocktaildb.com/api/json/v1/1/random.php", 
+                   description: "Cocktail Recipe", category: .lifestyle),
+        APIEndpoint(url: "https://dog.ceo/api/breeds/image/random", 
+                   description: "Dog Photo", category: .entertainment),
     ]
 }
 
