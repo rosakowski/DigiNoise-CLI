@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6364FF"/>
+      <stop offset="100%" style="stop-color:#8C5CFF"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded square background (macOS style) -->
+  <rect x="64" y="64" width="896" height="896" rx="180" fill="url(#purpleGrad)"/>
+  
+  <!-- Center dot -->
+  <circle cx="512" cy="540" r="50" fill="white"/>
+  
+  <!-- Antenna -->
+  <rect x="494" y="340" width="36" height="200" fill="white" rx="6"/>
+  <circle cx="512" cy="320" r="28" fill="white"/>
+  
+  <!-- Left waves -->
+  <path d="M 420 320 Q 380 270 420 220" stroke="white" stroke-width="24" fill="none" stroke-linecap="round"/>
+  <path d="M 380 320 Q 300 230 380 140" stroke="white" stroke-width="24" fill="none" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 340 320 Q 220 180 340 80" stroke="white" stroke-width="24" fill="none" stroke-linecap="round" opacity="0.4"/>
+  
+  <!-- Right waves -->
+  <path d="M 604 320 Q 644 270 604 220" stroke="white" stroke-width="24" fill="none" stroke-linecap="round"/>
+  <path d="M 644 320 Q 724 230 644 140" stroke="white" stroke-width="24" fill="none" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 684 320 Q 804 180 684 80" stroke="white" stroke-width="24" fill="none" stroke-linecap="round" opacity="0.4"/>
+</svg>

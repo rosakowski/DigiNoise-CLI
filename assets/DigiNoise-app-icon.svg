@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <!-- Purple gradient matching menu bar -->
+    <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6364FF"/>
+      <stop offset="100%" style="stop-color:#8C5CFF"/>
+    </linearGradient>
+    <!-- Noise/static gradient -->
+    <radialGradient id="noiseGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#6364FF;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#6364FF;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="512" cy="512" r="480" fill="url(#purpleGrad)"/>
+  
+  <!-- Center dot (antenna base) -->
+  <circle cx="512" cy="560" r="60" fill="white"/>
+  
+  <!-- Antenna tower -->
+  <rect x="496" y="340" width="32" height="220" fill="white" rx="4"/>
+  
+  <!-- Top of antenna -->
+  <circle cx="512" cy="320" r="30" fill="white"/>
+  
+  <!-- Signal waves - left side -->
+  <path d="M 380 320 Q 340 280 380 240" stroke="white" stroke-width="20" fill="none" stroke-linecap="round" opacity="0.9"/>
+  <path d="M 340 320 Q 260 240 340 160" stroke="white" stroke-width="20" fill="none" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 300 320 Q 180 200 300 100" stroke="white" stroke-width="20" fill="none" stroke-linecap="round" opacity="0.5"/>
+  
+  <!-- Signal waves - right side -->
+  <path d="M 644 320 Q 684 280 644 240" stroke="white" stroke-width="20" fill="none" stroke-linecap="round" opacity="0.9"/>
+  <path d="M 684 320 Q 764 240 684 160" stroke="white" stroke-width="20" fill="none" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 724 320 Q 844 200 724 100" stroke="white" stroke-width="20" fill="none" stroke-linecap="round" opacity="0.5"/>
+  
+  <!-- Noise dots/static particles -->
+  <circle cx="200" cy="400" r="8" fill="white" opacity="0.4"/>
+  <circle cx="824" cy="400" r="8" fill="white" opacity="0.4"/>
+  <circle cx="250" cy="600" r="6" fill="white" opacity="0.3"/>
+  <circle cx="774" cy="600" r="6" fill="white" opacity="0.3"/>
+  <circle cx="180" cy="700" r="10" fill="white" opacity="0.5"/>
+  <circle cx="844" cy="700" r="10" fill="white" opacity="0.5"/>
+  <circle cx="300" cy="800" r="7" fill="white" opacity="0.3"/>
+  <circle cx="724" cy="800" r="7" fill="white" opacity="0.3"/>
+  
+  <!-- D letter for DigiNoise -->
+  <text x="512" y="780" font-family="SF Pro Display, -apple-system, Helvetica, sans-serif" font-size="180" font-weight="700" fill="white" text-anchor="middle">D</text>
+</svg>
