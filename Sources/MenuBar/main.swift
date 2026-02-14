@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import DigiNoiseShared
 
 // MARK: - Category Settings
 struct CategorySettings: Codable {
@@ -25,7 +26,7 @@ struct Config: Codable {
     var requestCount: Int = 0
     var lastResetDate: Date = Date()
     var enabledCategories: CategorySettings = CategorySettings()
-    var currentPersona: String = "general"
+    var currentPersona: Persona = .general
     
     static let configPath = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent(".config/diginoise/config.json")
