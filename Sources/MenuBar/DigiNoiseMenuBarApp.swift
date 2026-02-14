@@ -211,9 +211,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         
         updateMenuIcon()
         
-        // Auto-generate noise on launch if already running
-        let config = Config.load()
-        if config.isRunning {
+        // Auto-start on first launch: enable running and generate noise
+        var config = Config.load()
+        if !config.isRunning && config.requestCount == 0 {
+            config.isRunning = true
+            config.save()
+            Task {
+                await NoiseGenerator.generate()
+                await MainActor.run {
+                    self.appState.refresh()
+                    self.updateMenuIcon()
+                }
+            }
+        } else if config.isRunning {
+            // Already running - generate noise
             Task {
                 await NoiseGenerator.generate()
                 await MainActor.run {
