@@ -1,6 +1,8 @@
 import Foundation
 
 // MARK: - Noise Generator (Shared between CLI and MenuBar)
+// Uses APIEndpoint from Personas.swift
+
 public struct NoiseGenerator {
     
     public static func generate() async {
@@ -25,8 +27,12 @@ public struct NoiseGenerator {
             return
         }
         
-        // Filter endpoints by enabled categories
-        let enabledEndpoints = APIEndpoint.all.filter { endpoint in
+        // Filter endpoints by enabled categories (using persona's endpoints if set)
+        let allEndpoints = config.currentPersona == .general 
+            ? APIEndpoint.all 
+            : config.currentPersona.defaultEndpoints
+        
+        let enabledEndpoints = allEndpoints.filter { endpoint in
             switch endpoint.category {
             case .reference: return config.enabledCategories.reference
             case .weather: return config.enabledCategories.weather
@@ -139,92 +145,5 @@ public struct NoiseGenerator {
             return midnight.timeIntervalSince(now)
         }
         return 3600 * 24
-    }
-}
-
-// MARK: - API Endpoint Category
-public enum EndpointCategory: String, CaseIterable, Codable {
-    case reference
-    case weather
-    case tech
-    case news
-    case finance
-    case science
-    case entertainment
-    case lifestyle
-    case sports
-    case recipes
-    case travel
-}
-
-// MARK: - API Endpoint
-public struct APIEndpoint: Codable {
-    public let url: String
-    public let description: String
-    public let category: EndpointCategory
-    
-    public init(url: String, description: String, category: EndpointCategory) {
-        self.url = url
-        self.description = description
-        self.category = category
-    }
-    
-    public static var all: [APIEndpoint] {
-        [
-            // Reference (Wikipedia)
-            APIEndpoint(url: "https://en.wikipedia.org/api/rest_v1/page/random/summary", description: "Wikipedia EN", category: .reference),
-            APIEndpoint(url: "https://wikiless.org/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json", description: "WikiLess Random", category: .reference),
-            
-            // Weather
-            APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.0060&current=temperature_2m,weather_code,wind_speed_10m", description: "NYC Weather", category: .weather),
-            APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=51.5074&longitude=-0.1278&current=temperature_2m,weather_code,wind_speed_10m", description: "London Weather", category: .weather),
-            APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=35.6762&longitude=139.6503&current=temperature_2m,weather_code,wind_speed_10m", description: "Tokyo Weather", category: .weather),
-            
-            // Tech
-            APIEndpoint(url: "https://www.reddit.com/r/technology.json?limit=1", description: "Reddit Tech", category: .tech),
-            APIEndpoint(url: "https://www.reddit.com/r/programming.json?limit=1", description: "Reddit Programming", category: .tech),
-            APIEndpoint(url: "https://www.reddit.com/r/ArtificialIntelligence.json?limit=1", description: "Reddit AI", category: .tech),
-            APIEndpoint(url: "https://news.ycombinator.com/rss", description: "Hacker News", category: .tech),
-            
-            // News
-            APIEndpoint(url: "https://www.reddit.com/r/worldnews.json?limit=1", description: "Reddit World News", category: .news),
-            APIEndpoint(url: "https://www.reddit.com/r/news.json?limit=1", description: "Reddit News", category: .news),
-            APIEndpoint(url: "https://www.bbc.com/news/rss.xml", description: "BBC News", category: .news),
-            
-            // Finance
-            APIEndpoint(url: "https://www.reddit.com/r/investing.json?limit=1", description: "Reddit Investing", category: .finance),
-            APIEndpoint(url: "https://www.reddit.com/r/wallstreetbets.json?limit=1", description: "Reddit WSB", category: .finance),
-            APIEndpoint(url: "https://www.reddit.com/r/Bitcoin.json?limit=1", description: "Reddit Bitcoin", category: .finance),
-            
-            // Science
-            APIEndpoint(url: "https://www.reddit.com/r/science.json?limit=1", description: "Reddit Science", category: .science),
-            APIEndpoint(url: "https://www.reddit.com/r/space.json?limit=1", description: "Reddit Space", category: .science),
-            APIEndpoint(url: "https://www.nasa.gov/rss/dyn/breaking_news.rss", description: "NASA News", category: .science),
-            
-            // Entertainment
-            APIEndpoint(url: "https://www.reddit.com/r/movies.json?limit=1", description: "Reddit Movies", category: .entertainment),
-            APIEndpoint(url: "https://www.reddit.com/r/television.json?limit=1", description: "Reddit TV", category: .entertainment),
-            APIEndpoint(url: "https://www.reddit.com/r/music.json?limit=1", description: "Reddit Music", category: .entertainment),
-            
-            // Lifestyle
-            APIEndpoint(url: "https://www.reddit.com/r/lifestyle.json?limit=1", description: "Reddit Lifestyle", category: .lifestyle),
-            APIEndpoint(url: "https://www.reddit.com/r/health.json?limit=1", description: "Reddit Health", category: .lifestyle),
-            APIEndpoint(url: "https://www.reddit.com/r/fitness.json?limit=1", description: "Reddit Fitness", category: .lifestyle),
-            
-            // Sports
-            APIEndpoint(url: "https://www.reddit.com/r/sports.json?limit=1", description: "Reddit Sports", category: .sports),
-            APIEndpoint(url: "https://www.reddit.com/r/nfl.json?limit=1", description: "Reddit NFL", category: .sports),
-            APIEndpoint(url: "https://www.reddit.com/r/nba.json?limit=1", description: "Reddit NBA", category: .sports),
-            APIEndpoint(url: "https://www.reddit.com/r/soccer.json?limit=1", description: "Reddit Soccer", category: .sports),
-            
-            // Recipes
-            APIEndpoint(url: "https://www.reddit.com/r/recipes.json?limit=1", description: "Reddit Recipes", category: .recipes),
-            APIEndpoint(url: "https://www.reddit.com/r/food.json?limit=1", description: "Reddit Food", category: .recipes),
-            
-            // Travel
-            APIEndpoint(url: "https://www.reddit.com/r/travel.json?limit=1", description: "Reddit Travel", category: .travel),
-            APIEndpoint(url: "https://www.reddit.com/r/solotravel.json?limit=1", description: "Reddit Solo Travel", category: .travel),
-            APIEndpoint(url: "https://www.reddit.com/r/geography.json?limit=1", description: "Reddit Geography", category: .travel),
-        ]
     }
 }
