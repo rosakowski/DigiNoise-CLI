@@ -522,7 +522,7 @@ public struct Config: Codable {
         .appendingPathComponent(".config/diginoise/config.json")
     
     public static func load() -> Config {
-        guard let data = try? Data(contentsOf: defaultConfigPath),
+        guard let data = try? Data(contentsOf: Config.defaultConfigPath),
               let config = try? JSONDecoder().decode(Config.self, from: data) else {
             return Config()
         }
@@ -531,11 +531,11 @@ public struct Config: Codable {
     
     public func save() {
         try? FileManager.default.createDirectory(
-            at: defaultConfigPath.deletingLastPathComponent(),
+            at: Config.defaultConfigPath.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
         if let data = try? JSONEncoder().encode(self) {
-            try? data.write(to: defaultConfigPath)
+            try? data.write(to: Config.defaultConfigPath)
         }
     }
     
@@ -549,7 +549,10 @@ public struct Config: Codable {
     }
     
     public var canRunToday: Bool {
-        checkAndResetDaily()
+        let calendar = Calendar.current
+        if !calendar.isDate(lastResetDate, inSameDayAs: Date()) {
+            return requestCount < dailyLimit // will reset on next save
+        }
         return requestCount < dailyLimit
     }
 }
