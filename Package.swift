@@ -23,10 +23,7 @@ let package = Package(
         .executableTarget(
             name: "DigiNoiseMenuBar",
             dependencies: ["DigiNoiseShared"],
-            path: "Sources/MenuBar",
-            resources: [
-                .process("Resources")
-            ]
+            path: "Sources/MenuBar"
         ),
         .target(
             name: "DigiNoiseShared",
