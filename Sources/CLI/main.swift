@@ -1,244 +1,6 @@
 import Foundation
 import ArgumentParser
-
-// MARK: - Category Settings
-struct CategorySettings: Codable {
-    var reference: Bool = true      // Wikipedia
-    var weather: Bool = true        // Weather APIs
-    var tech: Bool = true           // Hacker News, GitHub
-    var news: Bool = true           // Reddit news
-    var finance: Bool = true        // Stocks, crypto
-    var science: Bool = true        // Space, science
-    var entertainment: Bool = true  // Art, books, dogs
-    var lifestyle: Bool = true      // Quotes, cocktails
-    var sports: Bool = true         // Sports scores
-    var recipes: Bool = true        // Food recipes
-    var travel: Bool = true         // Translation, geography
-}
-
-// MARK: - Configuration
-struct Config: Codable {
-    var isRunning: Bool = false
-    var dailyLimit: Int = 5
-    var startHour: Int = 7
-    var endHour: Int = 23
-    var requestCount: Int = 0
-    var lastResetDate: Date = Date()
-    var enabledCategories: CategorySettings = CategorySettings()
-    
-    static let defaultConfigPath = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent(".config/diginoise/config.json")
-    
-    static func load() -> Config {
-        guard let data = try? Data(contentsOf: defaultConfigPath),
-              let config = try? JSONDecoder().decode(Config.self, from: data) else {
-            return Config()
-        }
-        return config
-    }
-    
-    func save() {
-        try? FileManager.default.createDirectory(
-            at: defaultConfigPath.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        if let data = try? JSONEncoder().encode(self) {
-            try? data.write(to: defaultConfigPath)
-        }
-    }
-    
-    mutating func checkAndResetDaily() {
-        let calendar = Calendar.current
-        if !calendar.isDate(lastResetDate, inSameDayAs: Date()) {
-            requestCount = 0
-            lastResetDate = Date()
-            save()
-        }
-    }
-    
-    var canRunToday: Bool {
-        checkAndResetDaily()
-        return requestCount < dailyLimit
-    }
-}
-
-// MARK: - Logger
-enum Logger {
-    static let logFile = FileManager.default.homeDirectoryForCurrentUser
-        .appendingPathComponent(".local/share/diginoise/diginoise.log")
-    
-    static func setup() {
-        try? FileManager.default.createDirectory(
-            at: logFile.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-    }
-    
-    static func log(_ message: String) {
-        let timestamp = ISO8601DateFormatter().string(from: Date())
-        let line = "[\(timestamp)] \(message)\n"
-        print(line, terminator: "")
-        
-        if let data = line.data(using: .utf8) {
-            if FileManager.default.fileExists(atPath: logFile.path) {
-                if let handle = try? FileHandle(forWritingTo: logFile) {
-                    _ = try? handle.seekToEnd()
-                    try? handle.write(contentsOf: data)
-                    try? handle.close()
-                }
-            } else {
-                try? data.write(to: logFile)
-            }
-        }
-    }
-}
-
-// MARK: - API Endpoints
-struct APIEndpoint {
-    let url: String
-    let description: String
-    let category: EndpointCategory
-    
-    enum EndpointCategory: String, CaseIterable, Codable {
-        case reference = "Reference"
-        case weather = "Weather"
-        case tech = "Tech"
-        case news = "News"
-        case finance = "Finance"
-        case science = "Science"
-        case entertainment = "Entertainment"
-        case lifestyle = "Lifestyle"
-        case sports = "Sports"
-        case recipes = "Recipes"
-        case travel = "Travel"
-    }
-    
-    // Expanded list for more realistic browsing patterns
-    static let all: [APIEndpoint] = [
-        // === REFERENCE (Wikipedia in 6 languages) ===
-        APIEndpoint(url: "https://en.wikipedia.org/api/rest_v1/page/random/summary", 
-                   description: "English Wikipedia", category: .reference),
-        APIEndpoint(url: "https://es.wikipedia.org/api/rest_v1/page/random/summary", 
-                   description: "Spanish Wikipedia", category: .reference),
-        APIEndpoint(url: "https://fr.wikipedia.org/api/rest_v1/page/random/summary", 
-                   description: "French Wikipedia", category: .reference),
-        APIEndpoint(url: "https://de.wikipedia.org/api/rest_v1/page/random/summary", 
-                   description: "German Wikipedia", category: .reference),
-        APIEndpoint(url: "https://it.wikipedia.org/api/rest_v1/page/random/summary", 
-                   description: "Italian Wikipedia", category: .reference),
-        APIEndpoint(url: "https://pt.wikipedia.org/api/rest_v1/page/random/summary", 
-                   description: "Portuguese Wikipedia", category: .reference),
-        
-        // === WEATHER (Global cities - diverse geography) ===
-        // Europe
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=51.5074&longitude=-0.1278&current=temperature_2m", 
-                   description: "London Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=48.8566&longitude=2.3522&current=temperature_2m", 
-                   description: "Paris Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=52.5200&longitude=13.4050&current=temperature_2m", 
-                   description: "Berlin Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=41.9028&longitude=12.4964&current=temperature_2m", 
-                   description: "Rome Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=55.7558&longitude=37.6173&current=temperature_2m", 
-                   description: "Moscow Weather", category: .weather),
-        
-        // Asia
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=35.6762&longitude=139.6503&current=temperature_2m", 
-                   description: "Tokyo Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=39.9042&longitude=116.4074&current=temperature_2m", 
-                   description: "Beijing Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=1.3521&longitude=103.8198&current=temperature_2m", 
-                   description: "Singapore Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=25.2048&longitude=55.2708&current=temperature_2m", 
-                   description: "Dubai Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=28.6139&longitude=77.2090&current=temperature_2m", 
-                   description: "New Delhi Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=-6.2088&longitude=106.8456&current=temperature_2m", 
-                   description: "Jakarta Weather", category: .weather),
-        
-        // Americas
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.0060&current=temperature_2m", 
-                   description: "New York Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=34.0522&longitude=-118.2437&current=temperature_2m", 
-                   description: "Los Angeles Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=19.4326&longitude=-99.1332&current=temperature_2m", 
-                   description: "Mexico City Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=-23.5505&longitude=-46.6333&current=temperature_2m", 
-                   description: "São Paulo Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=-33.8688&longitude=151.2093&current=temperature_2m", 
-                   description: "Sydney Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=43.6532&longitude=-79.3832&current=temperature_2m", 
-                   description: "Toronto Weather", category: .weather),
-        
-        // Africa
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=-33.9249&longitude=18.4241&current=temperature_2m", 
-                   description: "Cape Town Weather", category: .weather),
-        APIEndpoint(url: "https://api.open-meteo.com/v1/forecast?latitude=-1.2921&longitude=36.8219&current=temperature_2m", 
-                   description: "Nairobi Weather", category: .weather),
-        
-        // === TECH ===
-        APIEndpoint(url: "https://hacker-news.firebaseio.com/v0/topstories.json?limitToFirst=1", 
-                   description: "Hacker News", category: .tech),
-        APIEndpoint(url: "https://api.github.com/events?per_page=1", 
-                   description: "GitHub Activity", category: .tech),
-        
-        // === NEWS (Reddit as proxy for news interest) ===
-        APIEndpoint(url: "https://www.reddit.com/r/worldnews.json?limit=1", 
-                   description: "World News", category: .news),
-        APIEndpoint(url: "https://www.reddit.com/r/science.json?limit=1", 
-                   description: "Science News", category: .science),
-        APIEndpoint(url: "https://www.reddit.com/r/space.json?limit=1", 
-                   description: "Space News", category: .science),
-        
-        // === LIFESTYLE / ENTERTAINMENT ===
-        APIEndpoint(url: "https://api.quotable.io/random", 
-                   description: "Random Quote", category: .lifestyle),
-        APIEndpoint(url: "https://api.artic.edu/api/v1/artworks?limit=1", 
-                   description: "Art Institute", category: .entertainment),
-        APIEndpoint(url: "https://openlibrary.org/search.json?q=fiction&limit=1", 
-                   description: "Book Search", category: .entertainment),
-        APIEndpoint(url: "https://www.thecocktaildb.com/api/json/v1/1/random.php", 
-                   description: "Cocktail Recipe", category: .lifestyle),
-        APIEndpoint(url: "https://dog.ceo/api/breeds/image/random", 
-                   description: "Dog Photo", category: .entertainment),
-        APIEndpoint(url: "https://www.boredapi.com/api/activity", 
-                   description: "Activity Suggestion", category: .lifestyle),
-        
-        // === FINANCE (Stocks & Crypto) ===
-        APIEndpoint(url: "https://api.coindesk.com/v1/bpi/currentprice.json", 
-                   description: "Bitcoin Price", category: .finance),
-        APIEndpoint(url: "https://api.coinbase.com/v2/exchange-rates?currency=BTC", 
-                   description: "Crypto Rates", category: .finance),
-        APIEndpoint(url: "https://query1.finance.yahoo.com/v8/finance/chart/^GSPC?interval=1d&range=1d", 
-                   description: "S&P 500", category: .finance),
-        APIEndpoint(url: "https://query1.finance.yahoo.com/v8/finance/chart/^DJI?interval=1d&range=1d", 
-                   description: "Dow Jones", category: .finance),
-        APIEndpoint(url: "https://query1.finance.yahoo.com/v8/finance/chart/^IXIC?interval=1d&range=1d", 
-                   description: "NASDAQ", category: .finance),
-        
-        // === SPORTS ===
-        APIEndpoint(url: "https://www.thesportsdb.com/api/v1/json/3/all_sports.php", 
-                   description: "Sports List", category: .sports),
-        APIEndpoint(url: "https://www.thesportsdb.com/api/v1/json/3/all_countries.php", 
-                   description: "Sports Countries", category: .sports),
-        APIEndpoint(url: "https://api.football-data.org/v4/competitions/PL/matches?status=SCHEDULED&limit=1", 
-                   description: "Premier League", category: .sports),
-        
-        // === RECIPES (Food) ===
-        APIEndpoint(url: "https://www.themealdb.com/api/json/v1/1/random.php", 
-                   description: "Random Meal", category: .recipes),
-        APIEndpoint(url: "https://www.themealdb.com/api/json/v1/1/randomselection.php", 
-                   description: "Meal Selection", category: .recipes),
-        
-        // === TRAVEL (Translation & Geography) ===
-        APIEndpoint(url: "https://restcountries.com/v3.1/all?fields=name,capital,population", 
-                   description: "Country Facts", category: .travel),
-        APIEndpoint(url: "https://api.exchangerate-api.com/v4/latest/USD", 
-                   description: "Exchange Rates", category: .travel),
-        APIEndpoint(url: "https://worldtimeapi.org/api/ip", 
-                   description: "World Time", category: .travel),
-    ]
-}
+import DigiNoiseShared
 
 // MARK: - Noise Generator
 struct NoiseGenerator {
@@ -457,7 +219,7 @@ struct DigiNoiseCLI: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "diginoise",
         abstract: "Generate digital noise to obfuscate your online footprint",
-        subcommands: [Start.self, Stop.self, Status.self, Config.self, Install.self, Uninstall.self, Run.self, Log.self]
+        subcommands: [Start.self, Stop.self, Status.self, ConfigCmd.self, Install.self, Uninstall.self, Run.self, Log.self]
     )
 }
 
@@ -536,7 +298,7 @@ struct Status: AsyncParsableCommand {
     }
 }
 
-struct Config: AsyncParsableCommand {
+struct ConfigCmd: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "config",
         abstract: "Configure settings",
@@ -735,7 +497,7 @@ struct Uninstall: AsyncParsableCommand {
 }
 
 struct Run: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(abstract: "Run one iteration (for testing)", shouldBeHidden: true)
+    static var configuration = CommandConfiguration(abstract: "Run one iteration (for testing)")
     
     func run() async throws {
         Logger.setup()
@@ -746,7 +508,7 @@ struct Run: AsyncParsableCommand {
 struct Log: AsyncParsableCommand {
     static var configuration = CommandConfiguration(abstract: "View recent log entries")
     
-    @Option(name: .shortAndLong, help: "Number of lines to show", transform: Int.init)
+    @Option(name: .shortAndLong, help: "Number of lines to show")
     var lines: Int = 20
     
     func run() async throws {
@@ -772,7 +534,7 @@ struct Log: AsyncParsableCommand {
 }
 
 struct Daemon: AsyncParsableCommand {
-    static var configuration = CommandConfiguration(abstract: "Run daemon mode (called by launchd)", shouldBeHidden: true)
+    static var configuration = CommandConfiguration(abstract: "Run daemon mode (called by launchd)")
     
     func run() async throws {
         Logger.setup()

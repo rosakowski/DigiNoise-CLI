@@ -16,13 +16,18 @@ let package = Package(
             name: "DigiNoiseCLI",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "DigiNoiseShared"
             ],
             path: "Sources/CLI"
         ),
         .executableTarget(
             name: "DigiNoiseMenuBar",
-            dependencies: [],
+            dependencies: ["DigiNoiseShared"],
             path: "Sources/MenuBar"
+        ),
+        .target(
+            name: "DigiNoiseShared",
+            path: "Sources/Shared"
         )
     ]
 )

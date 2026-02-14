@@ -1,0 +1,81 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ master ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Select Xcode version
+      run: sudo xcode-select -s /Applications/Xcode_15.2.app/Contents/Developer
+    
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v3
+      with:
+        path: .build
+        key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+    
+    - name: Build CLI
+      run: swift build -c release --product diginoise
+    
+    - name: Build Menu Bar App
+      run: swift build -c release --product DigiNoiseMenuBar
+    
+    - name: Create universal binary
+      run: |
+        # Create universal binary for CLI
+        mkdir -p .build/universal/release
+        cp .build/release/diginoise .build/universal/release/
+        
+        # Make executable
+        chmod +x .build/universal/release/diginoise
+    
+    - name: Create release archive
+      run: |
+        # Create release directory
+        mkdir -p release
+        
+        # Copy CLI
+        cp .build/universal/release/diginoise release/
+        
+        # Copy Menu Bar app
+        cp -R .build/release/DigiNoiseMenuBar.app release/
+        
+        # Create zip
+        cd release
+        zip -r ../DigiNoise.zip .
+        cd ..
+    
+    - name: Upload artifacts
+      uses: actions/actions/upload-artifact@v3
+      with:
+        name: DigiNoise
+        path: DigiNoise.zip
+        retention-days: 30
+    
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: DigiNoise.zip
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Update latest tag
+      if: startsWith(github.ref, 'refs/tags/') && !contains(github.ref, 'alpha') && !contains(github.ref, 'beta')
+      run: |
+        git tag -f latest
+        git push origin latest --force
