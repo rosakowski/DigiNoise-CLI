@@ -157,7 +157,13 @@ class AppState: ObservableObject {
         newConfig.save()
         
         if newConfig.isRunning {
-            LaunchDHelper.start()
+            // Trigger immediate noise generation (self-sufficient menu bar)
+            Task {
+                await NoiseGenerator.generate()
+                await MainActor.run {
+                    self.refresh()
+                }
+            }
         }
         
         refresh()
@@ -204,6 +210,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         popover?.contentViewController = NSHostingController(rootView: MenuBarView().environmentObject(appState))
         
         updateMenuIcon()
+        
+        // Auto-generate noise on launch if already running
+        let config = Config.load()
+        if config.isRunning {
+            Task {
+                await NoiseGenerator.generate()
+                await MainActor.run {
+                    self.appState.refresh()
+                }
+            }
+        }
         
         // Watch for config changes
         Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
@@ -366,13 +383,14 @@ struct MenuBarView: View {
                     .fontWeight(.medium)
             }
             
-            if !appState.isServiceInstalled {
+            // Only show service status if CLI service is installed
+            if appState.isServiceInstalled {
                 HStack {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.orange)
-                    Text("Service not installed")
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                    Text("CLI Service active")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundColor(.green)
                 }
             }
         }
