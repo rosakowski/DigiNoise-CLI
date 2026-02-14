@@ -15,10 +15,17 @@ install: build
 	@chmod +x $(INSTALL_PATH)/$(BINARY_NAME)
 	@echo "Installing launchd service..."
 	@$(INSTALL_PATH)/$(BINARY_NAME) install
-	@echo "✅ CLI installation complete!"
-	@echo "Run '$(BINARY_NAME) start' to begin generating noise"
 	@echo ""
-	@echo "To run the menu bar app, run: make install-menu"
+	@echo "Installing Menu Bar app..."
+	@mkdir -p "/Applications/DigiNoiseMenuBar.app/Contents/MacOS"
+	@cp .build/release/DigiNoiseMenuBar "/Applications/DigiNoiseMenuBar.app/Contents/MacOS/DigiNoiseMenuBar"
+	@chmod +x "/Applications/DigiNoiseMenuBar.app/Contents/MacOS/DigiNoiseMenuBar"
+	@echo "✅ DigiNoise installed!"
+	@echo ""
+	@echo "🚀 Launching menu bar app..."
+	@open /Applications/DigiNoiseMenuBar.app
+	@echo ""
+	@echo "You should see 📡 in your menu bar! Click it to control DigiNoise."
 
 install-menu: build
 	@echo "Installing Menu Bar app..."

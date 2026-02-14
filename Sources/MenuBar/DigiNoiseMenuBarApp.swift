@@ -2,6 +2,33 @@ import SwiftUI
 import Combine
 import DigiNoiseShared
 
+// MARK: - Color Extension for Hex
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 0, 0, 0)
+        }
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
 // MARK: - Category Settings
 struct CategorySettings: Codable {
     var reference: Bool = true
@@ -161,7 +188,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         
         // Create status item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem?.button?.title = "🌐"
+        statusItem?.button?.title = "📡"
         statusItem?.button?.action = #selector(togglePopover)
         
         // Create popover
@@ -181,9 +208,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func updateMenuIcon() {
         let config = Config.load()
         if config.isRunning {
-            statusItem?.button?.title = "🟢"
+            statusItem?.button?.title = "📡🟢"  // Signal + running indicator
         } else {
-            statusItem?.button?.title = "🔴"
+            statusItem?.button?.title = "📡🔴"  // Signal + stopped indicator
         }
     }
     
@@ -207,33 +234,54 @@ struct MenuBarView: View {
     @EnvironmentObject var appState: AppState
     @State private var showingSettings = false
     
-    var body: some View {
-        VStack(spacing: 16) {
-            headerView
-            
-            // Persona selection
-            PersonaSelectionView(selectedPersona: .constant(appState.config.currentPersona))
-            
-            Divider()
-            statusView
-            Divider()
-            activityView
-            Divider()
-            actionButtons
-        }
-        .padding()
-        .frame(width: 300)
-    }
+    private let primaryGradient = LinearGradient(
+        colors: [Color(red: 0.39, green: 0.4, blue: 0.95), Color(red: 0.55, green: 0.36, blue: 0.96)],
+        startPoint: .leading,
+        endPoint: .trailing
+    )
     
-    var headerView: some View {
-        HStack {
-            Text("DigiNoise")
-                .font(.system(size: 18, weight: .bold))
-            Spacer()
-            Circle()
-                .fill(appState.config.isRunning ? Color.green : Color.red)
-                .frame(width: 10, height: 10)
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header with gradient
+            VStack(spacing: 4) {
+                HStack {
+                    Text("📡")
+                        .font(.system(size: 28))
+                    Text("DigiNoise")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white)
+                }
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(appState.config.isRunning ? Color.green : Color.gray)
+                        .frame(width: 8, height: 8)
+                    Text(appState.config.isRunning ? "Generating Noise" : "Stopped")
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.8))
+                }
+            }
+            .padding(.vertical, 16)
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity)
+            .background(primaryGradient)
+            
+            // Content
+            VStack(spacing: 16) {
+                // Persona selection
+                PersonaSelectionView(selectedPersona: .constant(appState.config.currentPersona))
+                    .padding(.top, 12)
+                
+                Divider()
+                statusView
+                Divider()
+                activityView
+                Divider()
+                actionButtons
+            }
+            .padding()
         }
+        .frame(width: 320)
+        .background(Color(NSColor.windowBackgroundColor))
     }
     
     var statusView: some View {
