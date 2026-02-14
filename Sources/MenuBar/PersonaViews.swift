@@ -201,23 +201,6 @@ struct PersonaDetailsView: View {
     }
 }
 
-// MARK: - Modified MenuBarView with Persona Selection
-extension MenuBarView {
-    var body: some View {
-        VStack(spacing: 16) {
-            headerView
-            
-            // Add persona selection
-            PersonaSelectionView(selectedPersona: .constant(appState.config.currentPersona))
-            
-            Divider()
-            statusView
-            Divider()
-            activityView
-            Divider()
-            actionButtons
-        }
-        .padding()
-        .frame(width: 300)
-    }
-}
+// MARK: - Persona Selection Helper
+
+// Note: MenuBarView extended in main.swift with persona selection

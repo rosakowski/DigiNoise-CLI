@@ -25,12 +25,13 @@ struct Config: Codable {
     var requestCount: Int = 0
     var lastResetDate: Date = Date()
     var enabledCategories: CategorySettings = CategorySettings()
+    var currentPersona: String = "general"
     
     static let configPath = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent(".config/diginoise/config.json")
     
     static func load() -> Config {
-        guard let data = try? Data(contentsOf: configPath),
+        guard let data = try? Data(contentsOf: Config.configPath),
               let config = try? JSONDecoder().decode(Config.self, from: data) else {
             return Config()
         }
@@ -39,11 +40,11 @@ struct Config: Codable {
     
     func save() {
         try? FileManager.default.createDirectory(
-            at: configPath.deletingLastPathComponent(),
+            at: Config.configPath.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
         if let data = try? JSONEncoder().encode(self) {
-            try? data.write(to: configPath)
+            try? data.write(to: Config.configPath)
         }
     }
 }
@@ -158,7 +159,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         NSApp.setActivationPolicy(.accessory)
         
         // Create status item
-        statusItem = NSStatusBar.shared.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem?.button?.title = "🌐"
         statusItem?.button?.action = #selector(togglePopover)
         
@@ -208,6 +209,10 @@ struct MenuBarView: View {
     var body: some View {
         VStack(spacing: 16) {
             headerView
+            
+            // Persona selection
+            PersonaSelectionView(selectedPersona: .constant(appState.config.currentPersona))
+            
             Divider()
             statusView
             Divider()
