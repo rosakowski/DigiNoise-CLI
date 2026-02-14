@@ -249,6 +249,15 @@ struct Start: AsyncParsableCommand {
         print("✅ DigiNoise started")
         print("   Daily limit: \(config.dailyLimit) requests")
         print("   Active hours: \(config.startHour):00-\(config.endHour):00")
+        
+        // Run one iteration immediately to verify it works
+        print("")
+        print("🔄 Running initial noise generation...")
+        await NoiseGenerator.generate()
+        
+        let updatedConfig = Config.load()
+        print("   Requests made: \(updatedConfig.requestCount)/\(updatedConfig.dailyLimit)")
+        print("")
         print("   Run 'diginoise status' to check progress")
     }
 }

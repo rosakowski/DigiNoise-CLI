@@ -95,7 +95,12 @@ struct LaunchDHelper {
         .appendingPathComponent("Library/LaunchAgents/com.diginoise.daemon.plist")
     
     static func isInstalled() -> Bool {
-        FileManager.default.fileExists(atPath: plistPath.path)
+        // Check if plist exists OR if the service is running
+        if FileManager.default.fileExists(atPath: plistPath.path) {
+            return true
+        }
+        // Also check if service is running via launchctl
+        return isRunning()
     }
     
     static func isRunning() -> Bool {
@@ -268,7 +273,15 @@ struct MenuBarView: View {
             // Content
             VStack(spacing: 16) {
                 // Persona selection
-                PersonaSelectionView(selectedPersona: .constant(appState.config.currentPersona))
+                PersonaSelectionView(selectedPersona: Binding(
+                    get: { appState.config.currentPersona },
+                    set: { newPersona in
+                        var config = Config.load()
+                        config.currentPersona = newPersona
+                        config.save()
+                        appState.refresh()
+                    }
+                ))
                     .padding(.top, 12)
                 
                 Divider()
