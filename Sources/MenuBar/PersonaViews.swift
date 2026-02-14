@@ -29,7 +29,7 @@ struct PersonaSelectionView: View {
                 }
             }
             .pickerStyle(MenuPickerStyle())
-            .onChange(of: selectedPersona) { oldValue, newPersona in
+            .onChange(of: selectedPersona) { newPersona in
                 // Save the new persona
                 var config = Config.load()
                 config.currentPersona = newPersona
@@ -37,9 +37,6 @@ struct PersonaSelectionView: View {
                 
                 // Update endpoints based on persona
                 updateCategoriesForPersona(newPersona)
-                
-                // Force UI refresh
-                NotificationCenter.default.post(name: .init("ConfigUpdated"), object: nil)
             }
             
             Text(selectedPersona.description)
