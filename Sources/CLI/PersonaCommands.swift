@@ -7,7 +7,7 @@ struct PersonaCmd: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "persona",
         abstract: "Manage digital personas for different browsing patterns",
-        subcommands: [List.self, Set.self, Info.self]
+        subcommands: [List.self, SetPersona.self, Info.self]
     )
 }
 
@@ -28,7 +28,7 @@ struct List: AsyncParsableCommand {
     }
 }
 
-struct Set: AsyncParsableCommand {
+struct SetPersona: AsyncParsableCommand {
     static var configuration = CommandConfiguration(abstract: "Set active persona")
     
     @Argument(help: "Persona name (use 'list' command to see options)")

@@ -3,13 +3,7 @@ import ArgumentParser
 import DigiNoiseShared
 
 // MARK: - Modified CLI Commands with Persona Support
-extension DigiNoiseCLI {
-    static var configuration = CommandConfiguration(
-        commandName: "diginoise",
-        abstract: "Generate digital noise to obfuscate your online footprint",
-        subcommands: [Start.self, Stop.self, Status.self, ConfigCmd.self, Install.self, Uninstall.self, Run.self, Log.self, PersonaCmd.self]
-    )
-}
+// Note: Persona subcommands are now integrated into main.swift configuration
 
 extension NoiseGenerator {
     static func generateForPersona(_ persona: Persona) async {

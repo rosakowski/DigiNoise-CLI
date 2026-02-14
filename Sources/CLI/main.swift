@@ -219,7 +219,7 @@ struct DigiNoiseCLI: AsyncParsableCommand {
     static var configuration = CommandConfiguration(
         commandName: "diginoise",
         abstract: "Generate digital noise to obfuscate your online footprint",
-        subcommands: [Start.self, Stop.self, Status.self, ConfigCmd.self, Install.self, Uninstall.self, Run.self, Log.self]
+        subcommands: [Start.self, Stop.self, Status.self, ConfigCmd.self, Categories.self, Install.self, Uninstall.self, Run.self, Log.self, Daemon.self, PersonaCmd.self, List.self, SetPersona.self, Info.self]
     )
 }
 
