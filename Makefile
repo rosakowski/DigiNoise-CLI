@@ -4,7 +4,7 @@ BINARY_NAME := diginoise
 MENU_BAR_NAME := DigiNoiseMenuBar
 INSTALL_PATH := /usr/local/bin
 BUILD_PATH := .build/release/$(BINARY_NAME)
-MENU_BAR_PATH := .build/release/$(MENU_BAR_NAME).app
+MENU_BAR_BINARY := .build/release/$(MENU_BAR_NAME)
 
 build:
 	swift build -c release
@@ -18,13 +18,15 @@ install: build
 	@echo "✅ CLI installation complete!"
 	@echo "Run '$(BINARY_NAME) start' to begin generating noise"
 	@echo ""
-	@echo "To install the menu bar app, run: make install-menu"
+	@echo "To run the menu bar app, run: make install-menu"
 
 install-menu: build
 	@echo "Installing Menu Bar app..."
-	@cp -R $(MENU_BAR_PATH) /Applications/
-	@echo "✅ Menu Bar app installed to /Applications/$(MENU_BAR_NAME).app"
-	@echo "Launch it from Applications or Spotlight"
+	@mkdir -p "/Applications/DigiNoiseMenuBar.app/Contents/MacOS"
+	@cp .build/release/DigiNoiseMenuBar "/Applications/DigiNoiseMenuBar.app/Contents/MacOS/DigiNoiseMenuBar"
+	@chmod +x "/Applications/DigiNoiseMenuBar.app/Contents/MacOS/DigiNoiseMenuBar"
+	@echo "Menu bar app installed to /Applications/DigiNoiseMenuBar.app"
+	@echo "Launch: open /Applications/DigiNoiseMenuBar.app"
 
 uninstall:
 	@echo "Uninstalling..."
