@@ -65,6 +65,11 @@ cat > "${CONTENTS_DIR}/Info.plist" << 'EOF'
 </plist>
 EOF
 
+# Copy the icon (if exists in assets folder)
+if [ -f "assets/DigiNoise.icns" ]; then
+    cp "assets/DigiNoise.icns" "${RESOURCES_DIR}/"
+fi
+
 # Create PkgInfo
 echo "APPL????" > "${CONTENTS_DIR}/PkgInfo"
 
