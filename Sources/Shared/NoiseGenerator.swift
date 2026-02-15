@@ -3,6 +3,9 @@ import Foundation
 // MARK: - Noise Generator (Shared between CLI and MenuBar)
 // Uses APIEndpoint from Personas.swift
 
+// Menu Bar mode: set to false to prevent app from exiting after noise
+public var noiseGeneratorShouldExit = true
+
 public struct NoiseGenerator {
     
     public static func generate() async {
@@ -93,8 +96,10 @@ public struct NoiseGenerator {
         
         Logger.log("Next run scheduled for: \(nextRun)")
         
-        // Exit and let launchd reschedule us
-        exit(0)
+        // Exit only for CLI/daemon mode - Menu Bar should keep running
+        if noiseGeneratorShouldExit {
+            exit(0)
+        }
     }
     
     public static func isWithinActiveHours(config: Config) -> Bool {

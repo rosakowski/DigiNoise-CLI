@@ -158,6 +158,8 @@ class AppState: ObservableObject {
         
         if newConfig.isRunning {
             // Trigger immediate noise generation (self-sufficient menu bar)
+            // Don't exit after - keep Menu Bar running
+            noiseGeneratorShouldExit = false
             Task {
                 await NoiseGenerator.generate()
                 await MainActor.run {
@@ -216,6 +218,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         if !config.isRunning && config.requestCount == 0 {
             config.isRunning = true
             config.save()
+            // Don't exit after - keep Menu Bar running
+            noiseGeneratorShouldExit = false
             Task {
                 await NoiseGenerator.generate()
                 await MainActor.run {
@@ -225,6 +229,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             }
         } else if config.isRunning {
             // Already running - generate noise
+            noiseGeneratorShouldExit = false
             Task {
                 await NoiseGenerator.generate()
                 await MainActor.run {
