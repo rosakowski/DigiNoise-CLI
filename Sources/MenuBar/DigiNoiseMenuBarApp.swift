@@ -2,30 +2,93 @@ import SwiftUI
 import Combine
 import DigiNoiseShared
 
-// MARK: - Color Extension for Hex
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
+// MARK: - Antenna Logo View
+struct AntennaLogoView: View {
+    var isActive: Bool
+    var size: CGFloat = 20
+    
+    var body: some View {
+        ZStack {
+            // Small circle at top
+            Circle()
+                .fill(Color.white)
+                .frame(width: size * 0.25, height: size * 0.25)
+                .offset(y: -size * 0.35)
+            
+            // Vertical line
+            Rectangle()
+                .fill(Color.white)
+                .frame(width: size * 0.12, height: size * 0.4)
+                .offset(y: -size * 0.1)
+            
+            // Larger circle at base
+            Circle()
+                .fill(Color.white)
+                .frame(width: size * 0.5, height: size * 0.5)
+                .offset(y: size * 0.25)
+            
+            // Signal waves - left side
+            ArcWave(radius: size * 0.35, startAngle: 150, endAngle: 210)
+                .stroke(Color.white, lineWidth: size * 0.08)
+                .opacity(isActive ? 1.0 : 0.4)
+            
+            ArcWave(radius: size * 0.5, startAngle: 140, endAngle: 220)
+                .stroke(Color.white, lineWidth: size * 0.06)
+                .opacity(isActive ? 1.0 : 0.4)
+            
+            ArcWave(radius: size * 0.65, startAngle: 130, endAngle: 230)
+                .stroke(Color.white, lineWidth: size * 0.04)
+                .opacity(isActive ? 1.0 : 0.4)
+            
+            // Signal waves - right side (mirrored)
+            ArcWave(radius: size * 0.35, startAngle: -30, endAngle: 30)
+                .stroke(Color.white, lineWidth: size * 0.08)
+                .opacity(isActive ? 1.0 : 0.4)
+            
+            ArcWave(radius: size * 0.5, startAngle: -40, endAngle: 40)
+                .stroke(Color.white, lineWidth: size * 0.06)
+                .opacity(isActive ? 1.0 : 0.4)
+            
+            ArcWave(radius: size * 0.65, startAngle: -50, endAngle: 50)
+                .stroke(Color.white, lineWidth: size * 0.04)
+                .opacity(isActive ? 1.0 : 0.4)
         }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
+        .frame(width: size, height: size)
+    }
+}
+
+// MARK: - Arc Wave Shape
+struct ArcWave: Shape {
+    var radius: CGFloat
+    var startAngle: Double
+    var endAngle: Double
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.addArc(
+            center: CGPoint(x: rect.midX, y: rect.midY),
+            radius: radius,
+            startAngle: .degrees(startAngle),
+            endAngle: .degrees(endAngle),
+            clockwise: false
         )
+        return path
+    }
+}
+
+// MARK: - Menu Bar Icon Image Generator
+extension NSImage {
+    static func antennaLogo(isActive: Bool, size: CGFloat = 22) -> NSImage {
+        let image = NSImage(size: NSSize(width: size, height: size))
+        image.lockFocus()
+        
+        let renderer = ImageRenderer(content: AntennaLogoView(isActive: isActive, size: size))
+        renderer.render { nsImage in
+            nsImage.draw(in: NSRect(x: 0, y: 0, width: size, height: size))
+        }
+        
+        image.unlockFocus()
+        return image
     }
 }
 
@@ -200,9 +263,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         
-        // Create status item
+        // Create status item with antenna logo
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem?.button?.title = "📡"
+        
+        // Set initial antenna logo (inactive/faded by default)
+        let initialImage = NSImage.antennaLogo(isActive: false, size: 22)
+        initialImage.isTemplate = false
+        statusItem?.button?.image = initialImage
         statusItem?.button?.action = #selector(togglePopover)
         
         // Create popover
@@ -246,11 +313,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     
     func updateMenuIcon() {
         let config = Config.load()
-        if config.isRunning {
-            statusItem?.button?.title = "📡🟢"  // Signal + running indicator
-        } else {
-            statusItem?.button?.title = "📡🔴"  // Signal + stopped indicator
-        }
+        
+        // Use custom antenna logo - faded when inactive, solid white when active
+        let image = NSImage.antennaLogo(isActive: config.isRunning, size: 22)
+        image.isTemplate = false  // Allow custom colors
+        statusItem?.button?.image = image
     }
     
     @objc func togglePopover() {
