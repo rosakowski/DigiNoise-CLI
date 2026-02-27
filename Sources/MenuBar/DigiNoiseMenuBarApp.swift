@@ -80,22 +80,35 @@ struct ArcWave: Shape {
 extension NSImage {
     @MainActor
     static func antennaLogo(isActive: Bool, size: CGFloat = 22) -> NSImage {
-        let image = NSImage(size: NSSize(width: size, height: size))
+        // Use SF Symbol antenna.radiowaves.left.and.right
+        let symbolName = "antenna.radiowaves.left.and.right"
         
-        image.lockFocus()
+        guard let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "DigiNoise") else {
+            // Fallback to simple circle if symbol not available
+            let fallback = NSImage(size: NSSize(width: size, height: size))
+            fallback.lockFocus()
+            NSColor.white.setFill()
+            NSBezierPath(ovalIn: NSRect(x: 0, y: 0, width: size, height: size)).fill()
+            fallback.unlockFocus()
+            return fallback
+        }
         
-        // Set up the context
-        let context = NSGraphicsContext.current!
-        context.imageInterpolation = .high
+        // Configure the symbol
+        let config = NSImage.SymbolConfiguration(pointSize: size * 0.8, weight: .regular)
+        let configuredImage = image.withSymbolConfiguration(config) ?? image
         
-        // Draw directly using SwiftUI view in a hosting controller
-        let antennaView = AntennaLogoView(isActive: isActive, size: size)
-        let hostingController = NSHostingController(rootView: antennaView)
-        hostingController.view.frame = NSRect(x: 0, y: 0, width: size, height: size)
-        hostingController.view.draw(hostingController.view.bounds)
+        // Tint: solid white when active, faded when inactive
+        let tintedImage = NSImage(size: configuredImage.size)
+        tintedImage.lockFocus()
         
-        image.unlockFocus()
-        return image
+        let alpha: CGFloat = isActive ? 1.0 : 0.4
+        NSColor.white.withAlphaComponent(alpha).set()
+        
+        let imageRect = NSRect(origin: .zero, size: configuredImage.size)
+        configuredImage.draw(in: imageRect, from: .zero, operation: .sourceOver, fraction: isActive ? 1.0 : 0.4)
+        
+        tintedImage.unlockFocus()
+        return tintedImage
     }
 }
 
