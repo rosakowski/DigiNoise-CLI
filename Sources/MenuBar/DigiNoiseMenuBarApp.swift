@@ -78,14 +78,21 @@ struct ArcWave: Shape {
 
 // MARK: - Menu Bar Icon Image Generator
 extension NSImage {
+    @MainActor
     static func antennaLogo(isActive: Bool, size: CGFloat = 22) -> NSImage {
         let image = NSImage(size: NSSize(width: size, height: size))
+        
         image.lockFocus()
         
-        let renderer = ImageRenderer(content: AntennaLogoView(isActive: isActive, size: size))
-        renderer.render { nsImage in
-            nsImage.draw(in: NSRect(x: 0, y: 0, width: size, height: size))
-        }
+        // Set up the context
+        let context = NSGraphicsContext.current!
+        context.imageInterpolation = .high
+        
+        // Draw directly using SwiftUI view in a hosting controller
+        let antennaView = AntennaLogoView(isActive: isActive, size: size)
+        let hostingController = NSHostingController(rootView: antennaView)
+        hostingController.view.frame = NSRect(x: 0, y: 0, width: size, height: size)
+        hostingController.view.draw(hostingController.view.bounds)
         
         image.unlockFocus()
         return image
@@ -266,10 +273,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         // Create status item with antenna logo
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         
-        // Set initial antenna logo (inactive/faded by default)
-        let initialImage = NSImage.antennaLogo(isActive: false, size: 22)
-        initialImage.isTemplate = false
-        statusItem?.button?.image = initialImage
+        // Set initial antenna logo (inactive/faded by default) - must run on MainActor
+        Task { @MainActor in
+            let initialImage = NSImage.antennaLogo(isActive: false, size: 22)
+            initialImage.isTemplate = false
+            statusItem?.button?.image = initialImage
+        }
         statusItem?.button?.action = #selector(togglePopover)
         
         // Create popover
@@ -312,12 +321,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
     
     func updateMenuIcon() {
-        let config = Config.load()
-        
-        // Use custom antenna logo - faded when inactive, solid white when active
-        let image = NSImage.antennaLogo(isActive: config.isRunning, size: 22)
-        image.isTemplate = false  // Allow custom colors
-        statusItem?.button?.image = image
+        Task { @MainActor in
+            let config = Config.load()
+            
+            // Use custom antenna logo - faded when inactive, solid white when active
+            let image = NSImage.antennaLogo(isActive: config.isRunning, size: 22)
+            image.isTemplate = false  // Allow custom colors
+            statusItem?.button?.image = image
+        }
     }
     
     @objc func togglePopover() {
