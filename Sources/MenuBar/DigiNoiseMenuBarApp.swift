@@ -398,48 +398,7 @@ struct MenuBarView: View {
             // Content
             VStack(spacing: 16) {
                 // Persona selection
-                PersonaSelectionView(selectedPersona: Binding(
-                    get: { appState.config.currentPersona },
-                    set: { newPersona in
-                        var config = Config.load()
-                        config.currentPersona = newPersona
-                        
-                        // Also update categories for persona - start with all disabled
-                        var newCategories = CategorySettings()
-                        newCategories.reference = false
-                        newCategories.weather = false
-                        newCategories.tech = false
-                        newCategories.news = false
-                        newCategories.finance = false
-                        newCategories.science = false
-                        newCategories.entertainment = false
-                        newCategories.lifestyle = false
-                        newCategories.sports = false
-                        newCategories.recipes = false
-                        newCategories.travel = false
-                        
-                        // Enable only the persona's categories
-                        let endpoints = newPersona.defaultEndpoints
-                        for endpoint in endpoints {
-                            switch endpoint.category {
-                            case .reference: newCategories.reference = true
-                            case .weather: newCategories.weather = true
-                            case .tech: newCategories.tech = true
-                            case .news: newCategories.news = true
-                            case .finance: newCategories.finance = true
-                            case .science: newCategories.science = true
-                            case .entertainment: newCategories.entertainment = true
-                            case .lifestyle: newCategories.lifestyle = true
-                            case .sports: newCategories.sports = true
-                            case .recipes: newCategories.recipes = true
-                            case .travel: newCategories.travel = true
-                            }
-                        }
-                        config.enabledCategories = newCategories
-                        config.save()
-                        appState.refresh()
-                    }
-                ))
+                PersonaSelectionView(selectedPersona: $appState.config.currentPersona)
                     .padding(.top, 12)
                 
                 Divider()
