@@ -54,10 +54,20 @@ struct PersonaSelectionView: View {
         let endpoints = persona.defaultEndpoints
         let categories = Set(endpoints.map { $0.category })
         
-        // Reset all categories first
-        config.enabledCategories = CategorySettings()
+        // Reset ALL categories to false first
+        config.enabledCategories.reference = false
+        config.enabledCategories.weather = false
+        config.enabledCategories.tech = false
+        config.enabledCategories.news = false
+        config.enabledCategories.finance = false
+        config.enabledCategories.science = false
+        config.enabledCategories.entertainment = false
+        config.enabledCategories.lifestyle = false
+        config.enabledCategories.sports = false
+        config.enabledCategories.recipes = false
+        config.enabledCategories.travel = false
         
-        // Enable only relevant categories
+        // Enable only categories relevant to the selected persona
         for category in categories {
             switch category {
             case .reference:
@@ -86,6 +96,9 @@ struct PersonaSelectionView: View {
         }
         
         config.save()
+        
+        // Notify AppState to refresh immediately
+        NotificationCenter.default.post(name: NSNotification.Name("DigiNoiseConfigDidChange"), object: nil)
     }
 }
 

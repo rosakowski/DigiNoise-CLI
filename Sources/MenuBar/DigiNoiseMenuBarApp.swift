@@ -223,12 +223,21 @@ class AppState: ObservableObject {
     
     init() {
         refresh()
+        
+        // Listen for config changes from other views
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(refresh),
+            name: NSNotification.Name("DigiNoiseConfigDidChange"),
+            object: nil
+        )
+        
         timer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { _ in
             self.refresh()
         }
     }
     
-    func refresh() {
+    @objc func refresh() {
         config = Config.load()
         recentLogs = LogReader.recentEntries(count: 8)
         isServiceInstalled = LaunchDHelper.isInstalled()
